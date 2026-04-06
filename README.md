@@ -1,4 +1,5 @@
 🐾 Patinder - Evcil Hayvan Eşleşme ve Sahiplendirme Platformu
+<img width="2048" height="2048" alt="denem" src="https://github.com/user-attachments/assets/2ac83621-11d8-4018-9c7f-5aab16c051c5" />
 
 Patinder, evcil hayvan sahiplerinin dostlarına uygun eş bulmalarını sağlayan ve aynı zamanda yuva arayan hayvanlar için sahiplendirme ilanlarının paylaşıldığı, Tinder mantığıyla çalışan modern bir web uygulamasıdır.
 
