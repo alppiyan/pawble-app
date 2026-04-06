@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Patinder</title>
+    <title>Pawble</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,58 +15,120 @@
 </head>
 <body class="font-sans text-dark dark:text-gray-100">
 
+  <div id="preloader" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white dark:bg-gray-900 transition-opacity duration-700">
+    <div class="relative flex items-center justify-center">
+        
+        <div class="absolute inset-0 rounded-full border-4 border-pink-50 dark:border-gray-800 border-t-primary animate-spin opacity-50"></div>
+        
+        <div class="w-48 h-48 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center p-1 shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
+            
+            <img src="loading.gif" alt="Yükleniyor..." class="w-full h-full object-cover rounded-full">
+            
+        </div>
+    </div>
+    
+<div class="mt-8 flex space-x-1 justify-center">
+    <span class="loading-letter text-3xl font-black text-primary tracking-tighter" style="--delay: 0.1s">P</span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.2s">A</span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.3s">W</span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.4s">B</span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.5s">L</span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.6s">E</span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.7s"> </span>
+    <span class="loading-letter text-3xl font-black text-dark dark:text-white tracking-tighter" style="--delay: 0.8s">!</span>
+</div>
+<p class="mt-4 text-xs text-gray-400 font-bold uppercase tracking-[0.4em] opacity-60">Sizin için hazırlanıyor</p>    <p class="mt-2 text-sm text-gray-400 font-medium tracking-wide">Dostlar bir araya geliyor...</p>
+</div>
 <div class="app-container">
 
-    <div id="screen-login" class="screen active">
-        <div class="absolute inset-0 z-0">
-            <img src="denem.png" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm"></div> 
-        </div>
-        <div class="relative z-10 flex flex-col justify-center items-center h-full p-8 pb-12">
-            <div class="w-full max-w-md">
-                <div class="mb-8 text-center">
-                    <h1 class="text-5xl font-extrabold text-white tracking-tight mb-2">Patinder</h1>
-                    <p class="text-gray-200 text-lg">Giriş Yap</p>
-                </div>
-                <form class="space-y-4" onsubmit="event.preventDefault(); loginUser();">
-                    <div class="glass-card rounded-2xl p-1 flex items-center">
-                        <i class="fas fa-envelope text-gray-200 ml-4"></i>
-                        <input type="email" id="login-email" placeholder="E-posta" class="w-full bg-transparent p-4 text-white placeholder-gray-300 outline-none" value="demo@patinder.com">
-                    </div>
-                    <div class="glass-card rounded-2xl p-1 flex items-center">
-                        <i class="fas fa-lock text-gray-200 ml-4"></i>
-                        <input type="password" id="login-password" placeholder="Şifre" class="w-full bg-transparent p-4 text-white placeholder-gray-300 outline-none" value="123456">
-                    </div>
-                    <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white font-bold py-5 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition">Giriş Yap</button>
-                </form>
-                <p class="mt-6 text-center text-gray-300 text-sm">Hesabın yok mu? <span class="text-white font-bold underline cursor-pointer hover:text-primary transition" onclick="switchScreen('screen-login', 'screen-register')">Kayıt Ol</span></p>
-            </div>
-        </div>
+<div id="screen-login" class="screen active fixed inset-0 flex items-center justify-start p-6 md:p-20 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <div id="paw-animations-container-login" class="absolute inset-0 pointer-events-none opacity-20"></div>
+
+    <div class="absolute right-[-10%] top-1/2 -translate-y-1/2 z-0 pointer-events-none overflow-hidden">
+        <img src="logo.png" class="w-[50rem] h-[50rem] object-contain opacity-20 dark:opacity-40 rotate-12 transform-gpu">
     </div>
 
-    <div id="screen-register" class="screen">
-        <div class="absolute inset-0 z-0">
-            <img src="patinderlogo.png" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm"></div>
-        </div>
-        <div class="relative z-10 flex flex-col justify-center items-center h-full p-8 pb-12">
-            <div class="w-full max-w-md">
-                <div class="mb-6 text-center"><h1 class="text-4xl font-extrabold text-white mb-2">Kayıt Ol</h1></div>
-                <form class="space-y-3" onsubmit="event.preventDefault(); registerUser();">
-                    <div class="flex gap-3">
-                        <div class="glass-card rounded-2xl p-1 flex-1"><input type="text" id="reg-name" placeholder="Ad" class="w-full bg-transparent p-3 text-white outline-none"></div>
-                        <div class="glass-card rounded-2xl p-1 flex-1"><input type="text" id="reg-surname" placeholder="Soyad" class="w-full bg-transparent p-3 text-white outline-none"></div>
-                    </div>
-                    <div class="glass-card rounded-2xl p-1"><input type="email" id="reg-email" placeholder="E-posta" class="w-full bg-transparent p-3 text-white outline-none"></div>
-                    <div class="glass-card rounded-2xl p-1"><input type="password" id="reg-password" placeholder="Şifre" class="w-full bg-transparent p-3 text-white outline-none"></div>
-                    <div class="glass-card rounded-2xl p-1"><input type="text" id="reg-location" placeholder="Şehir" class="w-full bg-transparent p-3 text-white outline-none"></div>
-                    <button type="submit" class="w-full bg-secondary hover:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition">Kayıt Ol</button>
-                </form>
-                <p class="mt-6 text-center text-gray-300 text-sm">Zaten üye misin? <span class="text-white font-bold underline cursor-pointer hover:text-secondary transition" onclick="switchScreen('screen-register', 'screen-login')">Giriş Yap</span></p>
+    <div class="relative z-10 w-full max-w-lg p-10 bg-white/50 dark:bg-gray-800/60 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/20 ml-0 md:ml-12">
+        
+        <div class="text-center mb-10">
+            <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-paw text-4xl text-primary animate-pulse"></i>
             </div>
+            <h1 class="text-5xl font-extrabold text-dark dark:text-white leading-tight">
+                <span class="text-primary">Paw</span><span class="text-secondary">ble</span>
+            </h1>
+            <p class="text-xl font-medium text-dark dark:text-white mt-1">Tekrar Hoş Geldin!</p>
+        </div>
+
+        <form class="space-y-6" onsubmit="event.preventDefault(); loginUser();">
+            <div class="relative group">
+                <i class="fas fa-envelope absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="email" id="login-email" placeholder="E-posta" 
+                    class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-14 py-4.5 outline-none border-2 border-transparent focus:border-primary/50 transition">
+            </div>
+
+            <div class="relative group">
+                <i class="fas fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="password" id="login-password" placeholder="Şifre" 
+                    class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-14 py-4.5 outline-none border-2 border-transparent focus:border-primary/50 transition">
+            </div>
+
+            <button type="submit" class="w-full bg-secondary text-white font-black text-lg py-5 rounded-full shadow-lg hover:scale-[1.02] transition-all">
+                Giriş Yap <i class="fas fa-sign-in-alt ml-2"></i>
+            </button>
+        </form>
+
+        <div class="mt-10 text-center border-t border-gray-100 pt-6">
+            <p class="text-sm text-gray-500">
+                Henüz üye değil misin? 
+                <button onclick="switchScreen('screen-login', 'screen-register')" class="font-bold text-primary hover:underline ml-1">Kayıt Ol 🐾</button>
+            </p>
         </div>
     </div>
+</div>
 
+<div id="screen-register" class="screen hidden fixed inset-0 flex items-center justify-start p-6 md:p-20 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <div id="paw-animations-container-register" class="absolute inset-0 pointer-events-none opacity-20"></div>
+
+    <div class="absolute right-[-10%] top-1/2 -translate-y-1/2 z-0 pointer-events-none overflow-hidden">
+        <img src="logo.png" class="w-[50rem] h-[50rem] object-contain opacity-20 dark:opacity-40 -rotate-12 transform-gpu">
+    </div>
+
+    <div class="relative z-10 w-full max-w-lg p-10 bg-white/50 dark:bg-gray-800/60 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/20 ml-0 md:ml-12">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-user-plus text-3xl text-secondary animate-pulse"></i>
+            </div>
+            <h1 class="text-4xl font-extrabold text-dark dark:text-white leading-tight">Aramıza Katıl!</h1>
+        </div>
+
+        <form class="space-y-4" onsubmit="event.preventDefault(); registerUser();">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" id="reg-name" placeholder="Ad" class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-6 py-4 outline-none border-2 border-transparent focus:border-secondary/50 transition">
+                <input type="text" id="reg-surname" placeholder="Soyad" class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-6 py-4 outline-none border-2 border-transparent focus:border-secondary/50 transition">
+            </div>
+
+            <input type="email" id="reg-email" placeholder="E-posta Adresi" class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-6 py-4 outline-none border-2 border-transparent focus:border-secondary/50 transition">
+            <input type="password" id="reg-password" placeholder="Şifre Oluştur" class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-6 py-4 outline-none border-2 border-transparent focus:border-secondary/50 transition">
+
+            <div class="relative group">
+                <i class="fas fa-map-marker-alt absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="reg-location" placeholder="Şehir / İlçe" class="w-full bg-white/70 dark:bg-gray-700/50 rounded-full px-12 py-4 outline-none border-2 border-transparent focus:border-secondary/50 transition">
+            </div>
+
+            <button type="submit" class="w-full bg-primary text-white font-black text-lg py-5 rounded-full shadow-lg hover:scale-[1.02] transition-all mt-4">
+                Kaydı Tamamla <i class="fas fa-paw ml-2"></i>
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-gray-100 pt-6">
+            <p class="text-sm text-gray-500">
+                Zaten üye misin? 
+                <button onclick="switchScreen('screen-register', 'screen-login')" class="font-bold text-secondary hover:underline ml-1">Giriş Yap 🚀</button>
+            </p>
+        </div>
+    </div>
+</div>
     <div id="screen-add-pet" class="screen bg-surface dark:bg-gray-900 p-6">
         <div class="max-w-3xl mx-auto w-full h-full flex flex-col">
             <div class="mt-4 mb-6 shrink-0">
@@ -105,32 +167,51 @@
         </div>
     </div>
 
-    <div id="screen-mode-selection" class="screen bg-surface dark:bg-gray-900 p-8">
-        <div class="max-w-4xl mx-auto w-full h-full flex flex-col justify-center">
-            <div class="mb-12 text-center">
-                <h2 class="text-5xl md:text-6xl font-extrabold text-dark dark:text-white mb-4 animate-slide-up">Hoş Geldin, <br><span class="text-primary" id="user-name-display">Kullanıcı</span> 👋</h2>
-                <p class="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium animate-slide-up" style="animation-delay: 0.1s;">Bugün ne yapmak istersin?</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div onclick="selectMode('mating')" class="group relative overflow-hidden rounded-[40px] p-10 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-glow animate-slide-up" style="animation-delay: 0.2s; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);">
-                    <div class="absolute top-0 right-0 -mt-6 -mr-6 w-40 h-40 bg-white opacity-20 rounded-full blur-2xl animate-float"></div>
-                    <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl animate-float" style="animation-delay: 1s;"></div>
-                    <div class="relative z-10 text-center"><h3 class="text-4xl font-extrabold text-white mb-3 drop-shadow-sm">Eş Bul 💖</h3><p class="text-white text-opacity-90 font-medium text-lg">Patili dostun için en uygun eşleşmeyi bul.</p></div>
-                </div>
-                <div onclick="selectMode('adoption')" class="group relative overflow-hidden rounded-[40px] p-10 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg animate-slide-up" style="animation-delay: 0.3s; background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
-                    <div class="absolute top-0 right-0 -mt-6 -mr-6 w-40 h-40 bg-white opacity-20 rounded-full blur-2xl animate-float" style="animation-delay: 0.5s;"></div>
-                    <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl animate-float" style="animation-delay: 1.5s;"></div>
-                    <div class="relative z-10 text-center"><h3 class="text-4xl font-extrabold text-white mb-3 drop-shadow-sm">Sahiplen 🏠</h3><p class="text-white text-opacity-90 font-medium text-lg">Yeni bir dost edin veya yuva ol.</p></div>
-                </div>
-            </div>
+   <div id="screen-mode-selection" class="screen flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <div id="paw-animations-container" class="absolute inset-0 pointer-events-none opacity-20"></div>
+
+    <div class="relative z-10 text-center mb-12">
+        <div class="w-24 h-24 bg-white dark:bg-gray-800 rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-6 transform rotate-12">
+            <i class="fas fa-paw text-5xl text-primary animate-bounce"></i>
         </div>
+        <h1 class="text-4xl font-black text-dark dark:text-white mb-2">Hoş Geldin, <span id="user-name-display" class="text-primary">Alp</span>!</h1>
+        <p class="text-gray-500 dark:text-gray-400">Bugün dostun için ne yapmak istersin?</p>
     </div>
+
+    <div class="grid grid-cols-1 gap-6 w-full max-w-sm relative z-10">
+        <button onclick="selectMode('mating')" class="group relative overflow-hidden bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-card hover:shadow-2xl transition-all duration-500 border-2 border-transparent hover:border-primary/30">
+            <div class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-heart text-9xl text-primary"></i>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-16 h-16 bg-pink-100 dark:bg-pink-900/30 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-heart text-2xl"></i>
+                </div>
+                <span class="text-xl font-bold text-dark dark:text-white">Eş Bul</span>
+                <p class="text-xs text-gray-400 mt-2 text-center">Dostuna en uygun arkadaşı <br> bulmak için kaydır.</p>
+            </div>
+        </button>
+
+        <button onclick="selectMode('adoption')" class="group relative overflow-hidden bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-card hover:shadow-2xl transition-all duration-500 border-2 border-transparent hover:border-secondary/30">
+            <div class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-home text-9xl text-secondary"></i>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-secondary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-home text-2xl"></i>
+                </div>
+                <span class="text-xl font-bold text-dark dark:text-white">Sahiplen</span>
+                <p class="text-xs text-gray-400 mt-2 text-center">Yeni bir cana yuva ol veya <br> ilanları incele.</p>
+            </div>
+        </button>
+    </div>
+</div>
 
     <div id="screen-home" class="screen bg-surface dark:bg-gray-900">
         <div class="w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur sticky top-0 z-20 border-b border-gray-100 dark:border-gray-700">
             <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
                 <button onclick="goBackToSelection()" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><i class="fas fa-arrow-left text-gray-600 dark:text-gray-200"></i></button>
-                <div class="flex flex-col items-center"><span id="header-subtitle" class="text-[11px] font-bold tracking-widest uppercase text-gray-400">Keşfet</span><span id="header-title" class="text-xl font-extrabold text-dark dark:text-white">Patinder</span></div>
+                <div class="flex flex-col items-center"><span id="header-subtitle" class="text-[11px] font-bold tracking-widest uppercase text-gray-400">Keşfet</span><span id="header-title" class="text-xl font-extrabold text-dark dark:text-white">Pawble</span></div>
                 <button onclick="openFilterModal()" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><i class="fas fa-sliders-h text-gray-600 dark:text-gray-200"></i></button>
             </div>
         </div>

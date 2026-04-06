@@ -20,6 +20,22 @@ const currentHost = window.location.hostname;
 const SERVER_URL = `http://${currentHost}:3000`;
 const API_BASE_URL = `http://${currentHost}:3000/api`;
 
+
+
+window.addEventListener('load', () => {
+    const preloader = document.getElementById('preloader');
+    
+    // Yarım saniye bekletip (şov amaçlı) sonra yumuşakça kapatıyoruz
+    setTimeout(() => {
+        preloader.classList.add('fade-out');
+        
+        // Animasyon bitince DOM'dan tamamen gizle
+        setTimeout(() => {
+            preloader.style.display = 'none';
+        }, 700);
+    }, 1500); 
+});
+
 function fixMediaUrl(url) {
     if (!url) return null;
     
@@ -139,6 +155,8 @@ async function loginUser() {
         if (data.success) {
             currentUser = data.user;
             if (data.hasPet) myPetId = data.activePetId;
+                        createFloatingPaws();
+
             // Giriş yapan adminse paneli göster
 if (currentUser.is_admin === 1) {
     document.getElementById('admin-panel-btn').classList.remove('hidden');
@@ -934,3 +952,44 @@ async function toggleShelterStatus(userId, isShelter) {
     } catch(e) { console.error("Yetki güncellenemedi", e); }
 }
 
+function createFloatingPaws() {
+    // Tüm olası konteynerleri yakala
+    const containers = [
+        document.getElementById('paw-animations-container-login'),
+        document.getElementById('paw-animations-container-register'),
+        document.getElementById('paw-animations-container') // Mod seçim ekranı
+    ];
+
+    containers.forEach(container => {
+        if (!container) return;
+        
+        // Eğer zaten çalışıyorsa temizle (üst üste binmesin)
+        if (container.dataset.intervalId) clearInterval(container.dataset.intervalId);
+
+        const intervalId = setInterval(() => {
+            // Sadece konteyner görünürse pati oluştur (performans için)
+            if (container.offsetParent === null) return; 
+
+            const paw = document.createElement('i');
+            paw.className = 'fas fa-paw floating-paw';
+            
+            const left = Math.random() * 100;
+            const duration = 10 + Math.random() * 5; // Biraz daha yavaş süzülsün
+            const size = 15 + Math.random() * 20;
+
+            paw.style.left = `${left}%`;
+            paw.style.animationDuration = `${duration}s`;
+            paw.style.fontSize = `${size}px`;
+            // Opaklığı biraz artırdım ki net görünsün
+            paw.style.opacity = 0.2 + Math.random() * 0.2; 
+            
+            container.appendChild(paw);
+            setTimeout(() => paw.remove(), duration * 1000);
+        }, 1500);
+
+        container.dataset.intervalId = intervalId;
+    });
+}
+
+// SAYFA YÜKLENDİĞİNDE ÇALIŞTIR
+window.addEventListener('load', createFloatingPaws);

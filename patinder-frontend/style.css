@@ -22,6 +22,37 @@ html.dark body { background-color: #111827; }
     border: none;
     border-radius: 0; 
 }
+/* Harf Animasyonu */
+.loading-letter {
+    display: inline-block;
+    animation: letterBounce 1.5s infinite ease-in-out;
+    animation-delay: var(--delay); /* HTML'de tanımladığımız gecikme */
+}
+
+@keyframes letterBounce {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 0.3;
+        filter: blur(0px);
+    }
+    50% {
+        transform: translateY(-10px); /* Hafif yukarı zıplama */
+        opacity: 1;
+        filter: blur(0.5px);
+        color: #FF4B7D; /* Zıplarken pembeleşme (opsiyonel) */
+    }
+}
+
+/* Alt metin için yavaşça yanıp sönme */
+#preloader p {
+    animation: pulseSlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseSlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+}
+
 
 /* --- EKRAN YÖNETİMİ --- */
 .screen { 
@@ -216,3 +247,26 @@ html.dark .msg-received { background: #4A5568; color: white; }
 .tab-btn { padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #718096; cursor: pointer; transition: all 0.2s; }
 .tab-btn.active { background-color: #FF6584; color: white; box-shadow: 0 4px 10px rgba(255, 101, 132, 0.3); }
 .tab-btn.active-blue { background-color: #38B2AC; color: white; box-shadow: 0 4px 10px rgba(56, 178, 172, 0.3); }
+
+
+.floating-paw {
+    position: absolute;
+    color: #FF4B7D; /* Pembe pati */
+    pointer-events: none;
+    z-index: 1; /* Arka planın (0) üstünde ama kutunun (10) altında */
+    animation: floatPaw linear infinite;
+    bottom: -50px;
+}
+
+/* Kapsayıcıların z-index'i */
+[id^="paw-animations-container"] {
+    z-index: 1;
+    overflow: hidden;
+}
+
+@keyframes floatPaw {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+}

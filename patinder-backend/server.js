@@ -22,6 +22,6 @@ app.use('/api', authRoutes);
 app.use('/api', petRoutes);
 app.use('/api', chatRoutes); // EKLENDİ
 
-app.listen(PORT, () => {
-    console.log(`🚀 Sunucu http://localhost:${PORT} üzerinde çalışıyor.`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Sunucu ${PORT} portunda tüm ağa açık olarak çalışıyor!`);
 });
