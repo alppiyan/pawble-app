@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Patinder</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans text-dark dark:text-gray-100">
+
+<div class="app-container">
+
+    <div id="screen-login" class="screen active">
+        <div class="absolute inset-0 z-0">
+            <img src="denem.png" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm"></div> 
+        </div>
+        <div class="relative z-10 flex flex-col justify-center items-center h-full p-8 pb-12">
+            <div class="w-full max-w-md">
+                <div class="mb-8 text-center">
+                    <h1 class="text-5xl font-extrabold text-white tracking-tight mb-2">Patinder</h1>
+                    <p class="text-gray-200 text-lg">Giriş Yap</p>
+                </div>
+                <form class="space-y-4" onsubmit="event.preventDefault(); loginUser();">
+                    <div class="glass-card rounded-2xl p-1 flex items-center">
+                        <i class="fas fa-envelope text-gray-200 ml-4"></i>
+                        <input type="email" id="login-email" placeholder="E-posta" class="w-full bg-transparent p-4 text-white placeholder-gray-300 outline-none" value="demo@patinder.com">
+                    </div>
+                    <div class="glass-card rounded-2xl p-1 flex items-center">
+                        <i class="fas fa-lock text-gray-200 ml-4"></i>
+                        <input type="password" id="login-password" placeholder="Şifre" class="w-full bg-transparent p-4 text-white placeholder-gray-300 outline-none" value="123456">
+                    </div>
+                    <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white font-bold py-5 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition">Giriş Yap</button>
+                </form>
+                <p class="mt-6 text-center text-gray-300 text-sm">Hesabın yok mu? <span class="text-white font-bold underline cursor-pointer hover:text-primary transition" onclick="switchScreen('screen-login', 'screen-register')">Kayıt Ol</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-register" class="screen">
+        <div class="absolute inset-0 z-0">
+            <img src="patinderlogo.png" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm"></div>
+        </div>
+        <div class="relative z-10 flex flex-col justify-center items-center h-full p-8 pb-12">
+            <div class="w-full max-w-md">
+                <div class="mb-6 text-center"><h1 class="text-4xl font-extrabold text-white mb-2">Kayıt Ol</h1></div>
+                <form class="space-y-3" onsubmit="event.preventDefault(); registerUser();">
+                    <div class="flex gap-3">
+                        <div class="glass-card rounded-2xl p-1 flex-1"><input type="text" id="reg-name" placeholder="Ad" class="w-full bg-transparent p-3 text-white outline-none"></div>
+                        <div class="glass-card rounded-2xl p-1 flex-1"><input type="text" id="reg-surname" placeholder="Soyad" class="w-full bg-transparent p-3 text-white outline-none"></div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-1"><input type="email" id="reg-email" placeholder="E-posta" class="w-full bg-transparent p-3 text-white outline-none"></div>
+                    <div class="glass-card rounded-2xl p-1"><input type="password" id="reg-password" placeholder="Şifre" class="w-full bg-transparent p-3 text-white outline-none"></div>
+                    <div class="glass-card rounded-2xl p-1"><input type="text" id="reg-location" placeholder="Şehir" class="w-full bg-transparent p-3 text-white outline-none"></div>
+                    <button type="submit" class="w-full bg-secondary hover:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition">Kayıt Ol</button>
+                </form>
+                <p class="mt-6 text-center text-gray-300 text-sm">Zaten üye misin? <span class="text-white font-bold underline cursor-pointer hover:text-secondary transition" onclick="switchScreen('screen-register', 'screen-login')">Giriş Yap</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-add-pet" class="screen bg-surface dark:bg-gray-900 p-6">
+        <div class="max-w-3xl mx-auto w-full h-full flex flex-col">
+            <div class="mt-4 mb-6 shrink-0">
+                 <button onclick="hideAddPetForm()" class="mb-4 text-gray-500 dark:text-gray-400 flex items-center gap-2 hover:text-primary transition"><i class="fas fa-arrow-left"></i> İptal</button>
+                <h2 class="text-3xl font-extrabold text-dark dark:text-white" id="pet-form-title">Dostunu Ekle 🐾</h2>
+            </div>
+            <form class="space-y-4 pb-24 overflow-y-auto flex-1 pr-2">
+                <input type="hidden" id="pet-id-hidden">
+                <div class="flex flex-col md:flex-row gap-6 mb-6">
+                    <div class="flex-1 flex justify-center">
+                        <label class="w-40 h-40 rounded-[30px] bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-gray-400 hover:border-primary transition relative">
+                            <img id="pet-preview" class="w-full h-full object-cover hidden">
+                            <div id="upload-placeholder" class="text-center text-gray-500"><i class="fas fa-camera text-3xl mb-2"></i><br><span class="text-sm font-bold">Fotoğraf Seç</span></div>
+                            <input type="file" id="pet-image" class="hidden" accept="image/*" onchange="previewImage(this)">
+                        </label>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Video (Opsiyonel)</label>
+                        <label class="w-full h-40 rounded-3xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-pointer overflow-hidden border-2 border-dashed border-gray-400 hover:border-secondary transition relative">
+                            <video id="video-preview-el" class="w-full h-full object-cover hidden" muted loop></video>
+                            <div id="video-placeholder" class="text-center text-gray-500"><i class="fas fa-video text-3xl mb-2"></i><br><span class="text-sm font-bold">Video Seç</span></div>
+                            <input type="file" id="pet-video" class="hidden" accept="video/*" onchange="previewVideo(this)">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">İsim</label><input type="text" id="pet-name" class="w-full bg-transparent border-b border-gray-200 dark:border-gray-700 py-2 outline-none text-dark dark:text-white font-bold text-lg" placeholder="Örn: Paşa" required></div>
+                <div class="flex flex-col md:flex-row gap-4"><div class="flex-1 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tür</label><select id="pet-species" onchange="filterBreeds()" class="w-full bg-transparent outline-none text-dark dark:text-white font-bold"></select></div><div class="flex-1 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Irk</label><select id="pet-breed" class="w-full bg-transparent outline-none text-dark dark:text-white font-bold"><option>Önce Tür Seç</option></select></div></div>
+                <div class="flex flex-col md:flex-row gap-4"><div class="flex-1 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Cinsiyet</label><select id="pet-gender" class="w-full bg-transparent outline-none text-dark dark:text-white font-bold"><option value="Erkek">Erkek</option><option value="Dişi">Dişi</option></select></div><div class="flex-1 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Yaş</label><input type="number" id="pet-age" class="w-full bg-transparent outline-none text-dark dark:text-white font-bold" value="1"></div></div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Amaç</label><div class="flex gap-6 mt-2"><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="pet-goal" value="mating" checked class="accent-primary w-4 h-4"><span class="text-sm font-bold text-dark dark:text-white">Eş Bulma</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="pet-goal" value="adoption" class="accent-secondary w-4 h-4"><span class="text-sm font-bold text-dark dark:text-white">Sahiplendirme</span></label></div></div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-700"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Açıklama</label><textarea id="pet-desc" rows="4" class="w-full bg-transparent outline-none text-dark dark:text-white text-sm resize-none" placeholder="Karakteri hakkında detaylı bilgi verebilirsiniz..."></textarea></div>
+                <div class="flex items-center gap-3 px-2 py-2"><input type="checkbox" id="pet-vaccine" class="w-5 h-5 accent-green-500 rounded cursor-pointer"><label for="pet-vaccine" class="text-sm font-bold text-gray-600 dark:text-gray-300 cursor-pointer">Aşıları Tam</label></div>
+                
+                <button type="button" onclick="handleSavePet(event)" class="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-primary/30 hover:bg-pink-600 active:scale-95 transition" id="save-pet-btn">Kaydet</button>        
+            </form>
+        </div>
+    </div>
+
+    <div id="screen-mode-selection" class="screen bg-surface dark:bg-gray-900 p-8">
+        <div class="max-w-4xl mx-auto w-full h-full flex flex-col justify-center">
+            <div class="mb-12 text-center">
+                <h2 class="text-5xl md:text-6xl font-extrabold text-dark dark:text-white mb-4 animate-slide-up">Hoş Geldin, <br><span class="text-primary" id="user-name-display">Kullanıcı</span> 👋</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-lg md:text-xl font-medium animate-slide-up" style="animation-delay: 0.1s;">Bugün ne yapmak istersin?</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div onclick="selectMode('mating')" class="group relative overflow-hidden rounded-[40px] p-10 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-glow animate-slide-up" style="animation-delay: 0.2s; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);">
+                    <div class="absolute top-0 right-0 -mt-6 -mr-6 w-40 h-40 bg-white opacity-20 rounded-full blur-2xl animate-float"></div>
+                    <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl animate-float" style="animation-delay: 1s;"></div>
+                    <div class="relative z-10 text-center"><h3 class="text-4xl font-extrabold text-white mb-3 drop-shadow-sm">Eş Bul 💖</h3><p class="text-white text-opacity-90 font-medium text-lg">Patili dostun için en uygun eşleşmeyi bul.</p></div>
+                </div>
+                <div onclick="selectMode('adoption')" class="group relative overflow-hidden rounded-[40px] p-10 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg animate-slide-up" style="animation-delay: 0.3s; background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
+                    <div class="absolute top-0 right-0 -mt-6 -mr-6 w-40 h-40 bg-white opacity-20 rounded-full blur-2xl animate-float" style="animation-delay: 0.5s;"></div>
+                    <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl animate-float" style="animation-delay: 1.5s;"></div>
+                    <div class="relative z-10 text-center"><h3 class="text-4xl font-extrabold text-white mb-3 drop-shadow-sm">Sahiplen 🏠</h3><p class="text-white text-opacity-90 font-medium text-lg">Yeni bir dost edin veya yuva ol.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-home" class="screen bg-surface dark:bg-gray-900">
+        <div class="w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur sticky top-0 z-20 border-b border-gray-100 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <button onclick="goBackToSelection()" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><i class="fas fa-arrow-left text-gray-600 dark:text-gray-200"></i></button>
+                <div class="flex flex-col items-center"><span id="header-subtitle" class="text-[11px] font-bold tracking-widest uppercase text-gray-400">Keşfet</span><span id="header-title" class="text-xl font-extrabold text-dark dark:text-white">Patinder</span></div>
+                <button onclick="openFilterModal()" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><i class="fas fa-sliders-h text-gray-600 dark:text-gray-200"></i></button>
+            </div>
+        </div>
+        
+        <div id="swipe-container" class="card-stack flex items-center justify-center" style="display:none;">
+            <div id="card-stack-inner" class="w-full h-full relative"></div>
+            <div id="no-more-cards" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 hidden"><div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4"><i class="fas fa-search text-3xl text-gray-400"></i></div><h3 class="font-bold text-dark dark:text-white text-xl">Aday Kalmadı</h3><button onclick="fetchCandidates()" class="mt-4 px-8 py-3 bg-dark hover:bg-gray-800 text-white font-bold rounded-full transition">Yenile</button></div>
+            <div id="swipe-actions" class="absolute bottom-6 flex gap-8 z-50">
+                <button onclick="swipe('left')" class="w-16 h-16 hover:scale-110 transition bg-white rounded-full text-red-500 shadow-xl text-2xl"><i class="fas fa-times"></i></button>
+                <button onclick="swipe('super')" class="w-14 h-14 hover:scale-110 transition bg-white rounded-full text-blue-500 shadow-xl text-xl -mt-2"><i class="fas fa-star"></i></button>
+                <button onclick="swipe('right')" class="w-16 h-16 hover:scale-110 transition bg-white rounded-full text-green-500 shadow-xl text-2xl"><i class="fas fa-heart"></i></button>
+            </div>
+        </div>
+
+        <div id="adoption-feed" class="flex-1 p-6 pb-32 overflow-y-auto w-full max-w-7xl mx-auto" style="display:none;">
+            <div id="adoption-grid" class="w-full"></div>
+            <div id="no-adoption-pets" class="hidden flex-col items-center justify-center mt-20 text-gray-400"><i class="fas fa-paw text-6xl mb-6 opacity-20"></i><p class="text-lg font-bold opacity-50">Şu an sahiplendirilecek dostumuz yok.</p></div>
+        </div>
+    </div>
+
+    <div id="screen-matches" class="screen bg-surface dark:bg-gray-900">
+        
+        <div class="px-6 py-6 pb-28 h-full flex flex-col">
+            <h1 class="text-3xl font-extrabold text-dark dark:text-white mb-6">Mesajlar</h1>
+            
+            <div class="flex gap-2 mb-6 bg-white dark:bg-gray-800 p-1.5 rounded-2xl shadow-sm shrink-0">
+                <div onclick="switchChatTab('mating')" id="chat-tab-mating" class="tab-btn flex-1 text-center py-2.5 rounded-xl active">Eşleşmeler</div>
+                <div onclick="switchChatTab('adoption')" id="chat-tab-adoption" class="tab-btn flex-1 text-center py-2.5 rounded-xl">Sahiplenme</div>
+            </div>
+
+            <div class="space-y-3 flex-1 overflow-y-auto pr-2" id="messages-list">
+                <p class="text-gray-400 text-sm italic p-4 text-center">Yükleniyor...</p>
+            </div>
+        </div>
+
+      <div id="screen-conversation" class="bg-surface dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 w-full h-full">
+            <div class="flex flex-col h-full w-full">
+                <div class="px-8 py-5 flex items-center bg-white/90 dark:bg-gray-800/90 backdrop-blur sticky top-0 z-20 border-b border-gray-100 dark:border-gray-700">
+                    <button onclick="stopChatPolling(); switchTab('matches');" class="md:hidden w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4"><i class="fas fa-arrow-left text-gray-600 dark:text-gray-200"></i></button>
+                    
+                    <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden mr-4 shadow-sm"><img id="chat-header-img" src="https://placehold.co/100" class="w-full h-full object-cover"></div>
+                    <div>
+                        <h3 class="font-bold text-dark dark:text-white text-lg" id="chat-header-name">Sohbet Seçin</h3>
+                        <p class="text-sm text-gray-400">Mesajlaşmaya başlamak için soldan seçin.</p>
+                    </div>
+                </div>
+                
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 flex flex-col">
+                </div>
+                
+                <div class="p-6 pb-32 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex gap-4 items-center">
+                    <input type="text" id="chat-input" placeholder="Mesajınızı yazın..." class="flex-1 bg-gray-50 dark:bg-gray-700 rounded-full px-8 py-5 outline-none text-lg text-dark dark:text-white border border-gray-200 dark:border-gray-600 focus:border-primary/50 transition shadow-inner">
+                    <button onclick="sendChatMessage()" class="w-16 h-16 hover:scale-105 transition bg-primary text-white rounded-full flex items-center justify-center shadow-xl shrink-0"><i class="fas fa-paper-plane text-2xl"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>  
+
+    <div id="screen-profile" class="screen bg-surface dark:bg-gray-900">
+        <div class="relative pb-32 overflow-y-auto h-full">
+            <div class="h-80 relative">
+                <img id="profile-cover-img" src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface dark:to-gray-900"></div>
+            </div>
+            
+            <div class="px-8 -mt-24 relative z-10 max-w-5xl mx-auto">
+                <div class="flex justify-between items-end">
+                     <div class="w-32 h-32 rounded-full border-4 border-surface dark:border-gray-900 overflow-hidden shadow-xl bg-white dark:bg-gray-800 flex items-center justify-center">
+                        <i class="fas fa-user text-5xl text-gray-300 dark:text-gray-600"></i>
+                    </div>
+                     <button onclick="openAddPetForm()" class="bg-secondary hover:bg-teal-600 text-white px-8 py-3 rounded-2xl text-base font-bold shadow-lg mb-6 transition transform hover:-translate-y-1">Yeni İlan Ekle +</button>
+                </div>
+               
+                <div class="mt-6 flex justify-between items-start bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-50 dark:border-gray-700">
+                    <div>
+                        <h2 class="text-4xl font-extrabold text-dark dark:text-white" id="profile-name">Kullanıcı Adı</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium flex items-center mt-2"><i class="fas fa-map-marker-alt mr-2 text-primary"></i> <span id="profile-detail">Konum</span></p>
+                    </div>
+                    <button onclick="openEditUserModal()" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition"><i class="fas fa-pen"></i></button>
+                </div>
+                
+                <div class="mt-10">
+                    <h3 class="text-2xl font-bold text-dark dark:text-white mb-6">Dostlarım 🐾</h3>
+                    <div id="my-pets-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                         <p class="text-gray-400 col-span-full">Henüz kayıtlı dostun yok.</p>
+                    </div>
+                </div>
+
+                <div class="mt-10 bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-50 dark:border-gray-700 flex justify-between items-center">
+                    <span class="font-bold text-dark dark:text-white text-lg ml-2"><i class="fas fa-moon text-indigo-500 mr-2"></i> Karanlık Mod</span>
+                    <label class="switch"><input type="checkbox" id="dark-mode-toggle" onclick="toggleDarkMode()"><span class="slider"></span></label>
+                </div>
+                
+                <button id="admin-panel-btn" onclick="openAdminPanel()" class="hidden w-full mt-6 mb-2 bg-purple-600 hover:bg-purple-700 transition text-white py-5 rounded-2xl font-bold text-lg shadow-lg">
+                    👑 Admin Paneli
+                </button>
+
+                <button class="mt-6 w-full py-5 text-red-500 hover:bg-red-50 font-bold bg-white dark:bg-gray-800 rounded-2xl border border-red-100 dark:border-gray-700 transition" onclick="location.reload()">Sistemden Çıkış Yap</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edit-user-modal" class="modal-overlay">
+        <div class="bottom-sheet flex flex-col p-8">
+            <h3 class="text-3xl font-bold text-dark dark:text-white mb-6">Profili Düzenle</h3>
+            <form onsubmit="event.preventDefault(); handleUpdateUser();" class="space-y-5">
+                <div><label class="block text-sm font-bold text-gray-400 mb-2">Ad</label><input type="text" id="edit-user-name" class="w-full p-4 bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-xl outline-none text-dark dark:text-white font-medium"></div>
+                <div><label class="block text-sm font-bold text-gray-400 mb-2">Soyad</label><input type="text" id="edit-user-surname" class="w-full p-4 bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-xl outline-none text-dark dark:text-white font-medium"></div>
+                <div><label class="block text-sm font-bold text-gray-400 mb-2">Şehir</label><input type="text" id="edit-user-location" class="w-full p-4 bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-xl outline-none text-dark dark:text-white font-medium"></div>
+                <div class="flex gap-4 pt-6">
+                    <button type="button" onclick="closeEditUserModal()" class="flex-1 py-4 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-bold transition">İptal</button>
+                    <button type="submit" class="flex-[2] bg-primary hover:bg-pink-600 text-white py-4 rounded-xl font-bold shadow-lg transition">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="screen-favorites" class="screen bg-surface dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto w-full px-6 py-8 pb-32 h-full flex flex-col">
+            <h1 class="text-3xl font-extrabold text-dark dark:text-white mb-6">Etkileşimler</h1>
+            
+            <div class="flex gap-2 mb-8 bg-white dark:bg-gray-800 p-1.5 rounded-2xl shadow-sm shrink-0">
+                <div onclick="switchHistoryTab('favorites')" id="tab-favorites" class="tab-btn flex-1 text-center py-3 rounded-xl active text-base">Favorilerim</div>
+                <div onclick="switchHistoryTab('likes')" id="tab-likes" class="tab-btn flex-1 text-center py-3 rounded-xl text-base">Beğendiklerim</div>
+            </div>
+
+            <div id="favorites-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-1 overflow-y-auto"></div>
+            <div id="no-favorites" class="hidden flex-col items-center justify-center mt-20 text-gray-400"><i class="fas fa-history text-6xl mb-6 opacity-20"></i><p class="text-lg font-bold opacity-50">Henüz bir kayıt yok.</p></div>
+        </div>
+    </div>
+
+    <div id="bottom-nav" class="floating-nav glass hidden">
+        <div class="nav-item active text-gray-400 hover:text-primary transition text-2xl p-4 cursor-pointer" onclick="switchTab('home')"><i class="fas fa-layer-group"></i></div>
+        <div class="nav-item text-gray-400 hover:text-secondary transition text-2xl p-4 cursor-pointer" onclick="switchTab('favorites')"><i class="fas fa-star"></i></div>
+        <div class="nav-item text-gray-400 hover:text-blue-500 transition text-2xl p-4 cursor-pointer" onclick="switchTab('matches')"><i class="fas fa-comment-alt"></i></div>
+        <div class="nav-item text-gray-400 hover:text-purple-500 transition text-2xl p-4 cursor-pointer" onclick="switchTab('profile')"><i class="fas fa-user"></i></div>
+    </div>
+
+   <div id="pet-detail-modal" class="modal-overlay">
+        <div class="bottom-sheet flex flex-col">
+            <div class="h-56 relative shrink-0">
+                <img id="modal-img" src="" class="w-full h-full object-cover rounded-t-[40px]">
+                <button onclick="closePetDetail()" class="absolute top-4 right-4 w-10 h-10 bg-black/50 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-black/80 transition z-50"><i class="fas fa-times text-lg"></i></button>
+                <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/90 to-transparent pointer-events-none"></div>
+                <div class="absolute bottom-4 left-6 text-white pointer-events-none">
+                    <h2 id="modal-name" class="text-3xl font-extrabold mb-1"></h2>
+                    <p id="modal-breed" class="text-white/90 text-xs font-bold bg-white/20 backdrop-blur px-3 py-1 rounded-full inline-block border border-white/30"></p>
+                </div>
+            </div>
+
+            <div class="p-6 flex-1 overflow-y-auto dark:text-white">
+                <div class="flex gap-3 mb-6">
+                    <div class="flex-1 bg-surface dark:bg-gray-800 p-3 rounded-2xl text-center border border-gray-100 dark:border-gray-700 shadow-sm"><span class="block text-xl mb-1">♂</span><span id="modal-gender" class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase"></span></div>
+                    <div class="flex-1 bg-surface dark:bg-gray-800 p-3 rounded-2xl text-center border border-gray-100 dark:border-gray-700 shadow-sm"><span class="block text-xl mb-1">🎂</span><span id="modal-age" class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase"></span></div>
+                    <div class="flex-1 bg-surface dark:bg-gray-800 p-3 rounded-2xl text-center border border-gray-100 dark:border-gray-700 shadow-sm"><span class="block text-xl mb-1">💉</span><span id="modal-vaccine" class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase"></span></div>
+                </div>
+
+                <div id="modal-video-container" class="mb-6 hidden w-full">
+                    <h3 class="font-bold text-dark dark:text-white text-base mb-2">Video</h3>
+                    <div class="w-full rounded-2xl overflow-hidden bg-black aspect-video shadow-md border border-gray-200 dark:border-gray-700">
+                        <video id="modal-video" src="" class="w-full h-full object-contain" controls playsinline preload="metadata"></video>
+                    </div>
+                </div>
+
+                <div class="mb-6"><h3 class="font-bold text-dark dark:text-white text-base mb-2">Hakkında</h3><p id="modal-desc" class="text-gray-600 dark:text-gray-300 leading-relaxed text-sm"></p></div>
+                
+                <div class="flex items-center gap-4 p-4 bg-surface dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl mb-20">
+                    <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary text-lg"><i class="fas fa-map-marker-alt"></i></div>
+                    <div><p class="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Konum</p><p id="modal-loc" class="text-dark dark:text-white font-extrabold text-sm"></p></div>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-0 w-full p-5 bg-white/90 dark:bg-gray-800/90 backdrop-blur border-t border-gray-100 dark:border-gray-700 rounded-b-[40px]">
+                <button onclick="initiateChatFromModal()" class="w-full bg-secondary hover:bg-teal-600 text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-secondary/30 transition transform active:scale-95">Sohbet Başlat 💬</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="filter-modal" class="modal-overlay">
+        <div class="bottom-sheet flex flex-col">
+            <div class="p-8 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-[40px]">
+                <h3 class="text-2xl font-extrabold text-dark dark:text-white">Filtrele</h3>
+                <button onclick="closeFilterModal()" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 transition flex items-center justify-center text-gray-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-8 flex-1 overflow-y-auto">
+                <div class="mb-8"><label class="block text-sm font-bold text-gray-400 uppercase mb-4">Tür</label><div class="flex gap-4"><button onclick="toggleFilter('species', 'Kedi')" class="filter-chip flex-1 py-4 rounded-2xl font-bold text-base hover:bg-gray-50 dark:hover:bg-gray-700" id="filter-species-Kedi">Kedi</button><button onclick="toggleFilter('species', 'Köpek')" class="filter-chip flex-1 py-4 rounded-2xl font-bold text-base hover:bg-gray-50 dark:hover:bg-gray-700" id="filter-species-Köpek">Köpek</button></div></div>
+                <div class="mb-8"><label class="block text-sm font-bold text-gray-400 uppercase mb-4">Cinsiyet</label><div class="flex gap-4"><button onclick="toggleFilter('gender', 'Dişi')" class="filter-chip flex-1 py-4 rounded-2xl font-bold text-base hover:bg-gray-50 dark:hover:bg-gray-700" id="filter-gender-Dişi">Dişi</button><button onclick="toggleFilter('gender', 'Erkek')" class="filter-chip flex-1 py-4 rounded-2xl font-bold text-base hover:bg-gray-50 dark:hover:bg-gray-700" id="filter-gender-Erkek">Erkek</button></div></div>
+                <div class="mb-8"><label class="block text-sm font-bold text-gray-400 uppercase mb-4">Yaş Aralığı</label><div class="flex items-center gap-4"><input type="number" id="filter-age-min" placeholder="Min" class="w-full p-4 bg-gray-50 dark:bg-gray-700 border border-transparent focus:border-gray-300 rounded-2xl outline-none font-bold text-dark dark:text-white"><span class="text-gray-400 font-bold">-</span><input type="number" id="filter-age-max" placeholder="Max" class="w-full p-4 bg-gray-50 dark:bg-gray-700 border border-transparent focus:border-gray-300 rounded-2xl outline-none font-bold text-dark dark:text-white"></div></div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-400 uppercase mb-4">Kaynak</label>
+                    <button onclick="toggleShelterFilter()" class="filter-chip w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 transition hover:bg-purple-50 dark:hover:bg-purple-900/20" id="filter-shelter-btn">
+                        <i class="fas fa-home text-purple-500 text-lg"></i> Sadece Barınak İlanlarını Göster
+                    </button>
+                </div>
+            </div>
+            <div class="p-8 border-t border-gray-100 dark:border-gray-700 flex gap-4 bg-white dark:bg-gray-800">
+                <button onclick="resetFilters()" class="flex-1 py-5 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl font-bold transition">Temizle</button>
+                <button onclick="applyFilters()" class="flex-[2] bg-secondary hover:bg-teal-600 text-white py-5 rounded-2xl font-bold text-lg shadow-lg transition">Uygula</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="admin-modal" class="modal-overlay">
+    <div class="bottom-sheet flex flex-col h-[80%] max-w-4xl">
+        <div class="p-8 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-[40px]">
+            <h3 class="text-2xl font-extrabold text-dark dark:text-white">👑 Admin Paneli</h3>
+            <button onclick="closeAdminPanel()" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-8 flex-1 overflow-y-auto">
+            <p class="text-sm font-bold text-gray-400 uppercase mb-6">Kullanıcıları Yönet</p>
+            <div id="admin-users-list" class="space-y-4">
+                <p class="text-center text-gray-400 text-base mt-10">Yükleniyor...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

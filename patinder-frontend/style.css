@@ -1,0 +1,218 @@
+/* --- GLOBAL WEBSITE LAYOUT (WEB APP MODU) --- */
+body { 
+    background-color: #f7fafc; 
+    height: 100vh; /* Kesin olarak ekranın boyunu alır */
+    width: 100vw; 
+    margin: 0; 
+    padding: 0;
+    overflow: hidden; /* Ana sayfanın boşluğa kaymasını KESİNLİKLE engeller */
+    transition: background-color 0.3s; 
+}
+html.dark body { background-color: #111827; }
+
+/* --- APP CONTAINER --- */
+.app-container { 
+    width: 100%; 
+    height: 100vh; /* Sadece ekrana sığsın */
+    background-color: transparent; 
+    position: static; 
+    overflow: hidden; /* Dışarı taşmayı engeller */
+    display: block; 
+    box-shadow: none; 
+    border: none;
+    border-radius: 0; 
+}
+
+/* --- EKRAN YÖNETİMİ --- */
+.screen { 
+    position: static; 
+    width: 100%; 
+    height: 100vh; /* Tam ekran yap, fazlasına izin verme */
+    min-height: 100vh; 
+    overflow: hidden; /* Sayfanın bütünü kaymasın, sadece iç listeler kaysın! */
+    display: none; 
+    flex-direction: column;
+    background-color: transparent; 
+    z-index: auto;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+.screen.active { 
+    display: flex; opacity: 1; visibility: visible; pointer-events: auto; 
+}
+
+/* --- BİLEŞENLERİ MASAÜSTÜNE UYARLAMA --- */
+
+/* 1. Tinder Card Stack (image_1.png) */
+.card-stack { 
+    position: relative; 
+    flex: 1; 
+    margin: 24px auto; 
+    margin-bottom: 90px; 
+    perspective: 1000px; 
+    width: 100%;
+    max-width: 440px; 
+    height: calc(100vh - 200px); 
+}
+
+/* 2. Sahiplendirme Grid'i (Izgara Görünümlü Yatay Kartlar) */
+#adoption-grid {
+    display: grid;
+    /* Ekran genişledikçe kartları yan yana dizer. Her kart minimum 320px yer kaplar. */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px; 
+    width: 100%; 
+    /* max-width kısıtlamasını sildik, artık tüm ekranı dolduracak! */
+}
+
+.adoption-card { transition: transform 0.2s; height: 100%; } 
+.adoption-card:active { transform: scale(0.98); } /* Tıklama hissi */
+
+.adoption-card { transition: transform 0.2s; } 
+.adoption-card:active { transform: scale(0.98); } /* Tıklama hissi */
+
+.adoption-card { transition: transform 0.2s; height: 100%; } 
+.adoption-card:active { transform: scale(0.95); }
+
+/* 3. Sabit Menü (Navigasyon) */
+.floating-nav { 
+    position: fixed; 
+    bottom: 24px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 90%; 
+    max-width: 600px; 
+    height: 70px; 
+    border-radius: 24px; 
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center; 
+    z-index: 100; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+}
+
+/* --- 4. DETAY MODALI VE AÇILIR PENCERELER --- */
+.modal-overlay { 
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85);    z-index: 9999; 
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.bottom-sheet { 
+    width: 90%; 
+    max-width: 400px; 
+    height: auto; 
+    max-height: 85vh; 
+    background: white; 
+    border-radius: 40px; 
+    transform: scale(0.9) translateY(20px); 
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s; 
+    overflow-y: auto; 
+    position: relative; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+}
+
+html.dark .bottom-sheet { 
+    background: #1f2937; 
+}
+
+.modal-overlay.open .bottom-sheet { 
+    transform: scale(1) translateY(0); 
+    opacity: 1; 
+}
+
+/* --- DİĞER BİLEŞENLER --- */
+.glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+html.dark .glass-card { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+.tinder-card { 
+    position: absolute; width: 100%; height: 100%; 
+    border-radius: 24px; background-color: white; 
+    overflow: hidden; background-size: cover; background-position: center; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.1s linear; 
+}
+.card-gradient { background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0) 100%); }
+
+.glass { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); }
+html.dark .glass { background: rgba(30,40,60,0.9); }
+
+/* Switch & Slider */
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; } .switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2196f3; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #2D3748; } input:checked + .slider:before { transform: translateX(26px); }
+
+/* Chips & Chat */
+.filter-chip { border: 1px solid #e2e8f0; color: #718096; transition: all 0.2s; } html.dark .filter-chip { border-color: #4a5568; color: #a0aec0; }
+.filter-chip.selected { background-color: #38B2AC; color: white; border-color: #38B2AC; }
+
+/* Chat Layout Fix for Desktop */
+#screen-matches {
+    display: none; 
+}
+#screen-matches.active {
+    display: grid;
+    grid-template-columns: 400px 1fr; 
+    height: 100vh;
+}
+
+#screen-matches.active > .px-6 {
+    overflow-y: auto;
+    border-right: 1px solid #e2e8f0;
+}
+html.dark #screen-matches.active > .px-6 { border-color: #374151; }
+
+#screen-conversation {
+    position: static;
+    grid-column: 2;
+    display: none;
+    height: 100vh;
+    width: 100%; 
+    min-width: 0; 
+}
+
+#screen-matches.active #screen-conversation.active {
+    display: flex;
+    flex-direction: column;
+    width: 100%; 
+}
+
+/* --- MESAJ BALONLARINI BÜYÜTME --- */
+.msg-bubble { 
+    max-width: 65%; 
+    padding: 14px 22px; 
+    border-radius: 24px; 
+    font-size: 16px; 
+    line-height: 1.5; 
+    margin-bottom: 12px; 
+    position: relative; 
+    word-wrap: break-word; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+}
+.msg-sent { background: #FF6584; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg-received { background: #E2E8F0; color: #2D3748; align-self: flex-start; border-bottom-left-radius: 4px; }
+html.dark .msg-received { background: #4A5568; color: white; }
+
+.tab-btn { padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #718096; cursor: pointer; transition: all 0.2s; }
+.tab-btn.active { background-color: #FF6584; color: white; box-shadow: 0 4px 10px rgba(255, 101, 132, 0.3); }
+.tab-btn.active-blue { background-color: #38B2AC; color: white; box-shadow: 0 4px 10px rgba(56, 178, 172, 0.3); }
