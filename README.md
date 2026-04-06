@@ -1,7 +1,7 @@
-🐾 Patinder - Evcil Hayvan Eşleşme ve Sahiplendirme Platformu
+🐾 Pawble - Evcil Hayvan Eşleşme ve Sahiplendirme Platformu
 <img width="2048" height="2048" alt="denem" src="https://github.com/user-attachments/assets/2ac83621-11d8-4018-9c7f-5aab16c051c5" />
 
-Patinder, evcil hayvan sahiplerinin dostlarına uygun eş bulmalarını sağlayan ve aynı zamanda yuva arayan hayvanlar için sahiplendirme ilanlarının paylaşıldığı, Tinder mantığıyla çalışan modern bir web uygulamasıdır.
+Pawble, evcil hayvan sahiplerinin dostlarına uygun eş bulmalarını sağlayan ve aynı zamanda yuva arayan hayvanlar için sahiplendirme ilanlarının paylaşıldığı, Tinder mantığıyla çalışan modern bir web uygulamasıdır.
 
 🌟 Özellikler
 
@@ -32,24 +32,24 @@ Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları i
 
 1. Depoyu bilgisayarınıza klonlayın:
    ```bash
-   git clone [https://github.com/KULLANICI_ADIN/patinder-app.git](https://github.com/KULLANICI_ADIN/patinder-app.git)
+   git clone [https://github.com/KULLANICI_ADIN/Pawble-app.git](https://github.com/KULLANICI_ADIN/Pawble-app.git)
 Backend klasörüne gidin ve gerekli paketleri yükleyin:
 
 Bash
-cd patinder-app/patinder-backend
+cd Pawble-app/Pawble-backend
 npm install
-patinder-backend klasörü içinde bir .env dosyası oluşturun ve veritabanı ayarlarınızı girin:
+Pawble-backend klasörü içinde bir .env dosyası oluşturun ve veritabanı ayarlarınızı girin:
 
 Plaintext
 PORT=3000
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=veritabani_sifreniz
-DB_NAME=patinder
+DB_NAME=Pawble
 Sunucuyu başlatın:
 
 Bash
 node server.js
-Tarayıcınızda patinder-frontend klasöründeki index.html dosyasını açarak veya VS Code "Live Server" eklentisiyle uygulamayı görüntüleyebilirsiniz.
+Tarayıcınızda Pawble-frontend klasöründeki index.html dosyasını açarak veya VS Code "Live Server" eklentisiyle uygulamayı görüntüleyebilirsiniz.
 
 Created by ALP PİYAN
