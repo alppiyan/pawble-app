@@ -1,24 +1,28 @@
 {
-  "name": "patinder-backend",
-  "version": "1.0.0",
+  "name": "pawble-backend",
+  "version": "2.0.0",
+  "description": "Pawble API — layered MVC on Express + MySQL",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:migrate": "node scripts/migrate.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "body-parser": "^2.2.2",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.20.0",
+    "mysql2": "^3.20.0"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.11"
   }
 }
