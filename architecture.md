@@ -1,6 +1,6 @@
 # Pawble — Architecture (Target State + Migration Plan)
 
-> Status: **proposal**. This document describes the **target architecture** for Pawble and the **migration plan** to move there from the current codebase. It is not yet implemented.
+> Status: **Phases 1–3 implemented** on branch `v2` (commits `7e12227` backend, `59b7cb5` frontend). **Phase 4 — real-time messaging via WebSocket — implemented** on branch `v3-websocket`. Message delivery and typing indicators run over Socket.IO; the 4 s HTTP-polling loop has been removed from the frontend. `POST /api/messages` remains as a deprecated fallback (§6). `presence:peer` and `message:read`/`message:read:ack` from the original event table (§3.13/§6.1) were not part of this pass — see Phase 4 notes below.
 
 ---
 
@@ -22,23 +22,24 @@ Non-goals: rewriting in another language, adopting a new database, adding a micr
 ## 2. High-Level Topology
 
 ```
-┌──────────────────────────┐         ┌────────────────────────────────┐
-│   Browser (React SPA)    │  HTTPS  │   Express API (Node 20+)       │
-│                          │ ───────►│                                │
-│  Vite dev / static build │ ◄───────│  Routes → Middlewares →        │
-│  Tailwind CSS            │   JSON  │  Controllers → Services →      │
-│  React Router            │         │  Repositories → MySQL          │
-│  Fetch wrapper + Context │         │                                │
-└──────────────────────────┘         └────────────────────────────────┘
-                                                │
-                                                ▼
-                                     ┌────────────────────────┐
-                                     │  MySQL 8 (mysql2 pool) │
-                                     │  + /uploads (disk)     │
-                                     └────────────────────────┘
+┌──────────────────────────┐   HTTPS / JSON    ┌────────────────────────────────┐
+│   Browser (React SPA)    │ ────────────────► │   Express API (Node 20+)       │
+│                          │ ◄──────────────── │                                │
+│  Vite dev / static build │     WebSocket     │  Routes → Middlewares →        │
+│  Tailwind CSS            │ ◄═══════════════► │  Controllers → Services →      │
+│  React Router            │     (Socket.IO)   │  Repositories → MySQL          │
+│  Fetch wrapper + Context │                   │  Realtime Gateway → Services   │
+│  Socket.IO client        │                   │                                │
+└──────────────────────────┘                   └────────────────────────────────┘
+                                                          │
+                                                          ▼
+                                               ┌────────────────────────┐
+                                               │  MySQL 8 (mysql2 pool) │
+                                               │  + /uploads (disk)     │
+                                               └────────────────────────┘
 ```
 
-Two deployables: the SPA (static bundle) and the API (Node process). The API serves `/uploads` for media; in production this should sit behind a reverse proxy (nginx, Caddy) or move to object storage — see §7.
+Two deployables: the SPA (static bundle) and the API (Node process). The same Node process serves the HTTP API **and** the WebSocket endpoint — both share the underlying `http.Server`. The API serves `/uploads` for media; in production this should sit behind a reverse proxy (nginx, Caddy — both must allow `Upgrade: websocket`) or move to object storage. See §7.
 
 ---
 
@@ -93,6 +94,10 @@ pawble-backend/
 │   │   ├── authValidators.js
 │   │   ├── petValidators.js
 │   │   └── chatValidators.js
+│   ├── realtime/                  # WebSocket layer (Socket.IO)
+│   │   ├── index.js               # Attaches Socket.IO to the HTTP server
+│   │   ├── socketAuth.js          # JWT verification on handshake
+│   │   └── chatGateway.js         # Chat event handlers (the WS analogue of a controller)
 │   ├── utils/
 │   │   ├── AppError.js            # Typed error with statusCode + code
 │   │   ├── asyncHandler.js        # Wraps async controllers, forwards errors
@@ -108,16 +113,17 @@ pawble-backend/
 
 ### 3.2 Layer responsibilities
 
-| Layer            | Knows about                           | Never touches             |
-|------------------|---------------------------------------|---------------------------|
-| **Route**        | Express, path, HTTP verb              | SQL, bcrypt, business rules |
-| **Middleware**   | `req` / `res` / `next`, cross-cutting | Domain logic              |
-| **Controller**   | `req` shape, services, HTTP responses | SQL, mysql2, JWT internals |
-| **Service**      | Domain rules, multiple repositories   | `req`/`res`, SQL strings  |
-| **Repository**   | SQL, mysql2 pool, row mapping         | HTTP, business rules      |
-| **Model**        | Shape of a domain entity              | I/O of any kind           |
+| Layer                 | Knows about                                            | Never touches             |
+|-----------------------|--------------------------------------------------------|---------------------------|
+| **Route**             | Express, path, HTTP verb                               | SQL, bcrypt, business rules |
+| **Middleware**        | `req` / `res` / `next`, cross-cutting                  | Domain logic              |
+| **Controller**        | `req` shape, services, HTTP responses                  | SQL, mysql2, JWT internals |
+| **Realtime Gateway**  | Socket.IO event shape, services, emits events back     | SQL, HTTP req/res, JWT internals |
+| **Service**           | Domain rules, multiple repositories                    | `req`/`res`, sockets, SQL strings |
+| **Repository**        | SQL, mysql2 pool, row mapping                          | HTTP, sockets, business rules |
+| **Model**             | Shape of a domain entity                               | I/O of any kind           |
 
-The cardinal rule: **only controllers see `req`/`res`, only repositories see SQL.** Services accept primitives/DTOs and return primitives/DTOs.
+The cardinal rule: **only controllers and gateways see I/O (HTTP / sockets), only repositories see SQL.** Services accept primitives/DTOs and return primitives/DTOs, agnostic to whether the call came from a REST endpoint or a WebSocket event.
 
 ### 3.3 Request flow (example: `POST /api/pets`)
 
@@ -291,6 +297,8 @@ The current API authenticates per request by trusting `userId` in the body. That
 
 Token lifetime: 7d access, no refresh flow in v1 (out of scope).
 
+The same JWT authenticates the **WebSocket handshake** (§3.13). The client passes the token in the Socket.IO `auth` payload; a connection-level middleware verifies it once and attaches the user identity to the socket. After connection, every event is implicitly trusted as that user — no per-event auth required.
+
 ### 3.11 Error handling
 
 Single shape, always:
@@ -305,6 +313,112 @@ Controllers never `try/catch` for the happy path; `asyncHandler` forwards to `er
 
 `src/config/env.js` loads `.env` once and **validates** required vars at boot. Missing `DB_PASSWORD` or `JWT_SECRET` should crash the process immediately, not surface as a 500 on the first request.
 
+### 3.13 Real-time messaging — WebSocket
+
+Chat runs over a WebSocket connection (Socket.IO). The HTTP-polling endpoints (`GET /api/conversations/:otherId/messages`) remain for **initial load and history scroll-back**, but new messages, typing indicators, and read receipts flow over the socket.
+
+**Why Socket.IO, not raw `ws`:** auto-reconnect on flaky mobile networks, rooms for per-conversation channels, an event API instead of hand-rolling JSON framing, and a JWT auth middleware that runs once per connection. Trade-off: ~15 KB gzipped on the client and a small abstraction over native WebSocket. If we ever need a leaner footprint, the protocol can be reimplemented on native `ws` without changing the service layer — only `src/realtime/` and the frontend client wrapper move.
+
+**Lifecycle:**
+
+```
+Client                              Server
+  │  connect (auth: { token })       │
+  │ ─────────────────────────────►   │
+  │                                  │  socketAuth verifies JWT, attaches user
+  │  ◄─────────── connected          │
+  │                                  │  socket joins room `user:<id>`
+  │                                  │
+  │  emit 'message:send'             │
+  │  { receiverId, content }         │
+  │ ─────────────────────────────►   │  chatGateway → chatService.sendMessage
+  │                                  │  → messageRepository.insert
+  │                                  │  → emit 'message:new' to both rooms
+  │  ◄─────────── 'message:new'      │
+  │            (full message DTO)    │
+```
+
+**Event schema** (versioned via the namespace `/chat`):
+
+| Direction         | Event              | Payload                                         |
+|-------------------|--------------------|-------------------------------------------------|
+| client → server   | `message:send`     | `{ receiverId, content }`                       |
+| server → both     | `message:new`      | `{ id, senderId, receiverId, content, sentAt }` |
+| client → server   | `typing:start`     | `{ otherUserId }`                               |
+| client → server   | `typing:stop`      | `{ otherUserId }`                               |
+| server → other    | `typing:peer`      | `{ userId, isTyping }`                          |
+| client → server   | `message:read`     | `{ otherUserId, upToMessageId }`                |
+| server → sender   | `message:read:ack` | `{ readerId, upToMessageId }`                   |
+| server → both     | `presence:peer`    | `{ userId, online: boolean }`                   |
+
+**Gateway pattern:** a gateway is to a socket event what a controller is to an HTTP request. It owns no business logic. The chat gateway translates events ↔ service calls:
+
+```js
+// src/realtime/chatGateway.js
+import { chatService } from '../services/chatService.js';
+
+export function registerChatGateway(io, socket) {
+  socket.on('message:send', async (payload, ack) => {
+    try {
+      const msg = await chatService.sendMessage({
+        senderId: socket.data.user.id,
+        receiverId: payload.receiverId,
+        content: payload.content,
+      });
+      // Fan out to both participants' user-rooms
+      io.to(`user:${msg.senderId}`).to(`user:${msg.receiverId}`).emit('message:new', msg);
+      ack?.({ ok: true });
+    } catch (err) {
+      ack?.({ ok: false, error: { code: err.code, message: err.message } });
+    }
+  });
+}
+```
+
+`chatService.sendMessage` is **the same** service that the REST endpoint used. Two transports, one rule. When a future client (mobile app, CLI) needs chat, it talks to the gateway; no business logic has to be reimplemented.
+
+**Why `user:<id>` rooms, not `conversation:<aId>:<bId>`:** a user is online once and may have multiple conversations open. Joining one room per user keeps presence simple and lets us deliver any message to any of their open tabs/devices.
+
+**Server bootstrap:**
+
+```js
+// src/realtime/index.js
+import { Server } from 'socket.io';
+import { socketAuth } from './socketAuth.js';
+import { registerChatGateway } from './chatGateway.js';
+
+export function attachRealtime(httpServer) {
+  const io = new Server(httpServer, {
+    cors: { origin: env.corsOrigin === '*' ? true : env.corsOrigin.split(',') },
+  });
+  io.use(socketAuth);                       // verifies JWT, sets socket.data.user
+  io.on('connection', (socket) => {
+    socket.join(`user:${socket.data.user.id}`);
+    registerChatGateway(io, socket);
+    socket.broadcast.emit('presence:peer', { userId: socket.data.user.id, online: true });
+    socket.on('disconnect', () => {
+      socket.broadcast.emit('presence:peer', { userId: socket.data.user.id, online: false });
+    });
+  });
+  return io;
+}
+```
+
+`server.js` creates the HTTP server explicitly so both Express and Socket.IO can attach to it:
+
+```js
+import http from 'node:http';
+import app from './src/app.js';
+import { attachRealtime } from './src/realtime/index.js';
+import env from './src/config/env.js';
+
+const server = http.createServer(app);
+attachRealtime(server);
+server.listen(env.port, () => console.log(`Pawble API+WS listening on :${env.port}`));
+```
+
+**Errors:** the gateway returns errors via the Socket.IO ack callback (`ack({ ok: false, error })`), not by throwing. Unhandled exceptions are caught, logged, and surfaced as `{ ok: false, error: { code: 'INTERNAL_ERROR' } }`. Same JSON shape as the REST error envelope.
+
 ---
 
 ## 4. Frontend — Target Architecture
@@ -317,6 +431,7 @@ Controllers never `try/catch` for the happy path; `asyncHandler` forwards to `er
 - **React Router** for screens
 - **Plain JavaScript (`.jsx`)** — no TypeScript
 - **No Redux** — feature-scoped Context + custom hooks; reach for Zustand only if state actually outgrows that
+- **Socket.IO client** for real-time chat (see §3.13)
 
 ### 4.2 Pattern: Container / Presentational + Hooks (MVVM-flavored)
 
@@ -342,19 +457,22 @@ pawble-frontend/
 │   │   ├── authApi.js
 │   │   ├── petApi.js
 │   │   ├── matchApi.js
-│   │   ├── chatApi.js
+│   │   ├── chatApi.js             # REST: history, list conversations (initial load only)
 │   │   └── adminApi.js
+│   ├── realtime/                  # WebSocket client wrapper
+│   │   └── socket.js              # Lazy Socket.IO client, JWT injected on connect, auto-reconnect
 │   ├── models/                    # Plain JS factories / shape helpers
 │   │   ├── pet.js
 │   │   └── user.js
 │   ├── context/
 │   │   ├── AuthContext.jsx        # currentUser, token, login, logout
+│   │   ├── SocketContext.jsx      # Single socket instance, connects when authed, disconnects on logout
 │   │   └── ThemeContext.jsx       # dark mode
 │   ├── hooks/
 │   │   ├── useAuth.js
 │   │   ├── useCandidates.js
 │   │   ├── useSwipe.js
-│   │   ├── useChat.js             # polling loop encapsulated here
+│   │   ├── useChat.js             # Subscribes to socket events, merges with REST-loaded history
 │   │   └── usePetForm.js
 │   ├── components/                # Stateless presentational
 │   │   ├── ui/                    # Button, Input, Modal, Avatar, Spinner
@@ -420,7 +538,8 @@ Components never call `fetch`. Hooks call API modules. API modules call `request
 ### 4.5 State management
 
 - **AuthContext** — current user + token. Provided at the root; consumed by `useAuth`.
-- **Per-feature hooks** own their own state. `useCandidates` owns the swipe deck; `useChat` owns the polling loop.
+- **SocketContext** — single Socket.IO client instance, scoped to an authed session. Connects on login, disconnects on logout. `useChat` subscribes to `message:new` / `typing:peer` from this socket.
+- **Per-feature hooks** own their own state. `useCandidates` owns the swipe deck; `useChat` owns the message list and merges socket-pushed messages with the REST-loaded history.
 - Cross-cutting UI state (theme, toasts) lives in small contexts.
 - No global store unless a third feature needs to read the same state — then promote to context, not before.
 
@@ -480,13 +599,28 @@ Stable paths, JWT-protected unless marked public:
 | GET    | `/api/pets/:petId/stats`          | Like/super/dislike counts           |        |
 | GET    | `/api/history`                    | Past interactions                   |        |
 | POST   | `/api/adoptions`                  | Adopt a pet                         |        |
-| GET    | `/api/conversations`              | Caller's conversations              |        |
-| GET    | `/api/conversations/:otherId`     | Messages with another user          |        |
-| POST   | `/api/messages`                   | Send message                        |        |
-| GET    | `/api/admin/users`                | List users (admin)                  |        |
-| PUT    | `/api/admin/users/:id/shelter`    | Toggle shelter flag (admin)         |        |
+| GET    | `/api/conversations`                       | Caller's conversations (list)       |        |
+| GET    | `/api/conversations/:otherId/messages`     | Message history with another user   |        |
+| GET    | `/api/admin/users`                         | List users (admin)                  |        |
+| PUT    | `/api/admin/users/:id/shelter`             | Toggle shelter flag (admin)         |        |
 
 The shift from `/api/users/:userId` to `/api/users/me` removes a class of authorization bugs — you can no longer act on someone else by guessing an ID.
+
+> **Note:** `POST /api/messages` is **deprecated** as of Phase 4. New messages flow over the WebSocket gateway. The endpoint remains for one minor version as a fallback, then is removed.
+
+### 6.1 WebSocket Events
+
+Namespace: `/chat` on the same origin as the HTTP API. Connection requires a valid JWT in the Socket.IO handshake `auth` payload. Full event schema in §3.13. Summary:
+
+| Event              | Direction              | Purpose                                  |
+|--------------------|------------------------|------------------------------------------|
+| `message:send`     | client → server (ack)  | Send a new message                       |
+| `message:new`      | server → both peers    | Deliver a new message                    |
+| `typing:start/stop`| client → server        | Local user starts/stops typing           |
+| `typing:peer`      | server → other peer    | Peer's typing state changed              |
+| `message:read`     | client → server        | Mark thread read up to a message id      |
+| `message:read:ack` | server → original sender | Confirm peer has read up to that point |
+| `presence:peer`    | server → all           | A user came online or went offline       |
 
 ---
 
@@ -497,7 +631,8 @@ The shift from `/api/users/:userId` to `/api/users/me` removes a class of author
 - **CORS.** Origin allowlist from env in production; permissive in dev.
 - **Logging.** Pino with request IDs in production. `console.log` only in `server.js` boot output.
 - **Security.** bcrypt cost ≥ 10, JWT in `Authorization` header (not cookies for now), parameterized SQL everywhere (already true), file type and size limits enforced in multer.
-- **Chat real-time.** The current frontend polls. Keep polling in v1; document Socket.IO as a v2 upgrade path — both endpoints in `chatRoutes` would stay valid.
+- **Chat real-time.** WebSocket (Socket.IO) from Phase 4 onward — see §3.13 for the protocol and §6.1 for the event surface. The polling implementation introduced in the v2 frontend is a temporary shim and is removed once the gateway lands. REST endpoints stay only for initial history load.
+- **Reverse proxy.** Any production proxy in front of the API (nginx, Caddy, Cloudflare) must allow `Upgrade: websocket` on the chat path. Default nginx blocks it — `proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade";` is required. Caddy handles it automatically.
 
 ---
 
@@ -552,30 +687,61 @@ Stand up the new SPA in parallel; cut over screen by screen.
 
 **Exit criteria:** `npm run build` in `pawble-frontend/` produces a working SPA; the old vanilla files are gone.
 
-### Phase 4 — Polish (post-cutover)
+### Phase 4 — Real-time messaging via WebSocket (implemented on `v3-websocket`)
 
-- Replace chat polling with Socket.IO (optional).
+Replace the temporary HTTP polling in the v2 frontend with Socket.IO. The service layer doesn't change; we add a gateway above it and a socket client below it.
+
+**Backend:**
+1. ✅ `npm i socket.io` in `pawble-backend`.
+2. ✅ Convert `server.js` to explicitly create an `http.Server` so both Express and Socket.IO attach to the same port.
+3. ✅ Add `src/realtime/index.js`, `src/realtime/socketAuth.js`, `src/realtime/chatGateway.js` per §3.13 (`message:send`, `typing:start`/`typing:stop`).
+4. ✅ Wire `message:send` to the existing `chatService.sendMessage` (no service-layer changes; it now returns the full message DTO via `messageRepository.findById`).
+5. ⏸ `presence:peer` join/leave — deferred (see note below).
+6. ✅ Mark `POST /api/messages` deprecated (keeps working, logs a warning when used).
+
+**Frontend:**
+1. ✅ `npm i socket.io-client` in `pawble-frontend`.
+2. ✅ Add `src/realtime/socket.js` — a lazy singleton that connects with the current JWT (`auth` callback reads the token store on each (re)connect).
+3. ✅ Add `SocketContext` that connects on login, disconnects on logout.
+4. ✅ Rewrite `useChat`:
+   - Initial messages still loaded via REST (`chatApi.listMessages`), and re-synced on socket reconnect.
+   - Subscribe to `message:new` events for the active `otherId`; append to the message list (deduped by id).
+   - Send via `socket.emit('message:send', ...)` with ack, falling back to the deprecated REST endpoint if the socket is disconnected; removed the polling interval entirely.
+5. ✅ Added a typing indicator (`typing:start`/`typing:stop` ↔ `typing:peer`) in `ConversationPage`. ⏸ Online dot — deferred along with presence.
+6. ✅ Deleted the 4 s `setInterval` from `useChat`.
+
+**Deferred to Phase 5:** `presence:peer` and `message:read`/`message:read:ack` (rows in §3.13/§6.1) need a bit more design — presence needs an initial "who's online" snapshot on connect (not just deltas), and read receipts need a persisted last-read pointer (no `read_at` column yet). Implementing either without the other half is a half-finished UI feature, so both were left out of this pass.
+
+**Exit criteria:** opening two browser tabs as different users and sending a message in one shows it in the other in under 200 ms — verified against a live server + DB (see PR notes). No network tab traffic between sends. Disconnecting the network and reconnecting auto-restores the socket and re-syncs history.
+
+### Phase 5 — Hardening (post real-time)
+
 - Move `/uploads` behind nginx or to S3-compatible storage.
-- Add Jest/Vitest suites for `services/*` and `hooks/*`.
+- Add Jest/Vitest suites for `services/*` and `hooks/*`. The gateway is testable by feeding it a fake socket.
 - Add a GitHub Actions workflow: lint + tests + build on PR.
+- Add database migration tooling (`db-migrate-mysql` or similar) before schema starts diverging across environments.
 
 ---
 
 ## 9. Risks & Open Questions
 
 - **Token storage in `localStorage`** is vulnerable to XSS. Acceptable for v1 given a trusted dev environment; revisit with httpOnly cookies + CSRF tokens if the app goes public.
-- **Polling chat** is fine for low traffic but won't scale past a few hundred concurrent users. Socket.IO migration is a one-day job; do it before public launch.
+- **Reverse proxy must support WebSocket upgrade.** Default nginx config drops the `Upgrade` header — the chat will silently fall back to polling (Socket.IO's default fallback) or fail entirely. Verify in staging: `wscat -c wss://host/socket.io/?EIO=4&transport=websocket` should return 101.
+- **Horizontal scaling needs sticky sessions or a Redis adapter.** Two API instances behind a load balancer can't see each other's connected sockets — a user connected to instance A won't receive messages emitted on instance B. Solutions: sticky sessions (per-user pinning) or `socket.io-redis-adapter` to fan out events through Redis. Not needed for v1 single-instance deploys; add when scaling out.
+- **Socket auth on long-lived connections.** A JWT expires after 7 days, but a socket might stay open longer. We re-verify on reconnect, and currently force-disconnect when a token expires mid-session is left as a Phase 5 polish item.
 - **`/uploads` served from the Node process** mixes static asset serving into the API. Fine for dev. In production, put nginx in front or use S3.
-- **No DB migrations tooling.** Schema is documented but not versioned. Consider `knex` or `node-pg-migrate`-equivalent (`db-migrate-mysql`) when the schema starts changing.
-- **No tests yet.** The refactor is the right time to introduce them; targeting `services/` first gives the most value per line of test code.
+- **No DB migrations tooling.** Schema is documented but not versioned. Consider `knex` or `db-migrate-mysql` when the schema starts changing.
+- **No tests yet.** The refactor is the right time to introduce them; targeting `services/` first gives the most value per line of test code. The chat gateway is also test-worthy — stub the socket and assert it emits the right events.
 
 ---
 
 ## 10. Glossary
 
 - **Controller (backend)** — Express handler. HTTP I/O only.
-- **Service** — business logic, no HTTP, no SQL.
+- **Gateway (backend)** — Socket.IO event handler. The WebSocket analogue of a controller: parses an event, calls services, emits events back. No business logic, no SQL.
+- **Service** — business logic, no HTTP, no sockets, no SQL.
 - **Repository** — SQL + row mapping. Returns domain objects.
 - **Model** — shape of a domain entity; no behavior beyond construction/mapping.
+- **Room (Socket.IO)** — a named group of sockets the server can broadcast to. We use one room per user (`user:<id>`) so messages reach every device that user has open.
 - **Container (frontend)** — a page/route component that wires hooks to presentational components.
 - **Hook (frontend)** — encapsulates state + side effects for a feature; the frontend analogue of a service.

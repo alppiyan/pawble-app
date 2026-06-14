@@ -10,12 +10,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 export default function ConversationPage() {
   const { otherId } = useParams();
   const { user } = useAuth();
-  const { messages, loading, send } = useMessages(otherId);
+  const { messages, loading, send, peerTyping, notifyTyping } = useMessages(otherId);
   const endRef = useRef(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [messages.length, peerTyping]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -30,9 +30,16 @@ export default function ConversationPage() {
         ) : (
           messages.map((m) => <MessageBubble key={m.id} message={m} isMine={m.senderId === user.id} />)
         )}
+        {peerTyping && (
+          <div className="flex justify-start mb-2">
+            <div className="max-w-[75%] px-4 py-2 rounded-2xl rounded-bl-sm bg-gray-100 dark:bg-gray-800 text-gray-400 text-sm italic">
+              yazıyor...
+            </div>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
-      <ChatInput onSend={send} />
+      <ChatInput onSend={send} onTyping={notifyTyping} />
     </div>
   );
 }

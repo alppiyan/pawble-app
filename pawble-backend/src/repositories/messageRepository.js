@@ -10,6 +10,11 @@ export const messageRepository = {
     return result.insertId;
   },
 
+  async findById(id) {
+    const [rows] = await pool.execute('SELECT * FROM messages WHERE id = ?', [id]);
+    return rowToMessage(rows[0]);
+  },
+
   async findBetweenUsers(userAId, userBId) {
     const [rows] = await pool.execute(
       `SELECT * FROM messages

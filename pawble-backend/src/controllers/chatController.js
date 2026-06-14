@@ -12,12 +12,15 @@ export const chatController = {
     res.json(messages);
   }),
 
+  // Deprecated: new messages should be sent via the WebSocket `message:send` event.
+  // Kept for clients that haven't migrated yet.
   send: asyncHandler(async (req, res) => {
-    const result = await chatService.sendMessage({
+    console.warn('[deprecated] POST /api/messages — use the WebSocket message:send event');
+    const message = await chatService.sendMessage({
       senderId: req.user.id,
       receiverId: req.body.receiverId,
       content: req.body.content,
     });
-    res.status(201).json(result);
+    res.status(201).json(message);
   }),
 };

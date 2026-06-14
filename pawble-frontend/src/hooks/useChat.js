@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { chatApi } from '../api/chatApi.js';
-
-const POLL_MS = 4000;
+import { useSocket } from '../context/SocketContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export function useConversations() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { socket } = useSocket();
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -22,13 +23,22 @@ export function useConversations() {
     refetch();
   }, [refetch]);
 
+  useEffect(() => {
+    const onMessage = () => refetch();
+    socket.on('message:new', onMessage);
+    return () => socket.off('message:new', onMessage);
+  }, [socket, refetch]);
+
   return { conversations, loading, refetch };
 }
 
 export function useMessages(otherId) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const timer = useRef(null);
+  const [peerTyping, setPeerTyping] = useState(false);
+  const { socket } = useSocket();
+  const { user } = useAuth();
+  const otherIdNum = Number(otherId);
 
   const fetchOnce = useCallback(async () => {
     try {
@@ -42,18 +52,67 @@ export function useMessages(otherId) {
 
   useEffect(() => {
     if (!otherId) return;
+    setLoading(true);
     fetchOnce();
-    timer.current = setInterval(fetchOnce, POLL_MS);
-    return () => clearInterval(timer.current);
   }, [otherId, fetchOnce]);
+
+  // Re-sync history after a reconnect, in case messages were missed while offline.
+  useEffect(() => {
+    if (!otherId) return;
+    socket.on('connect', fetchOnce);
+    return () => socket.off('connect', fetchOnce);
+  }, [socket, otherId, fetchOnce]);
+
+  useEffect(() => {
+    if (!otherId) return;
+
+    const onMessage = (message) => {
+      const isThisConversation =
+        (message.senderId === otherIdNum && message.receiverId === user.id) ||
+        (message.senderId === user.id && message.receiverId === otherIdNum);
+      if (!isThisConversation) return;
+      setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
+    };
+
+    const onTyping = ({ userId, isTyping }) => {
+      if (userId === otherIdNum) setPeerTyping(isTyping);
+    };
+
+    socket.on('message:new', onMessage);
+    socket.on('typing:peer', onTyping);
+    return () => {
+      socket.off('message:new', onMessage);
+      socket.off('typing:peer', onTyping);
+    };
+  }, [socket, otherId, otherIdNum, user.id]);
+
+  // Reset the typing indicator when switching conversations.
+  useEffect(() => {
+    setPeerTyping(false);
+  }, [otherId]);
 
   const send = useCallback(
     async (content) => {
-      await chatApi.send({ receiverId: Number(otherId), content });
-      fetchOnce();
+      if (socket.connected) {
+        const ack = await new Promise((resolve) => {
+          socket.emit('message:send', { receiverId: otherIdNum, content }, resolve);
+        });
+        if (!ack?.ok) throw new Error(ack?.error?.message || 'Failed to send message');
+        return;
+      }
+      // Socket unavailable — fall back to the REST endpoint.
+      await chatApi.send({ receiverId: otherIdNum, content });
+      await fetchOnce();
     },
-    [otherId, fetchOnce],
+    [socket, otherIdNum, fetchOnce],
   );
 
-  return { messages, loading, send };
+  const notifyTyping = useCallback(
+    (isTyping) => {
+      if (socket.connected) socket.emit(isTyping ? 'typing:start' : 'typing:stop', { otherUserId: otherIdNum });
+    },
+    [socket, otherIdNum],
+  );
+
+  return { messages, loading, send, peerTyping, notifyTyping };
 }

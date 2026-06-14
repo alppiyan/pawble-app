@@ -56,6 +56,6 @@ export const chatService = {
       throw new AppError('Cannot message self', 400, 'SELF_MESSAGE');
     }
     const id = await messageRepository.insert({ senderId, receiverId, content });
-    return { id };
+    return messageRepository.findById(id);
   },
 };

@@ -3,6 +3,7 @@ import path from 'node:path';
 import multer from 'multer';
 import env from '../config/env.js';
 
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp)$/i;
 const VIDEO_EXT = /\.(mp4|avi|mov|mkv|webm)$/i;
 
 const storage = multer.diskStorage({
@@ -21,6 +22,9 @@ const storage = multer.diskStorage({
 const fileFilter = (_req, file, cb) => {
   if (file.fieldname === 'video' && !VIDEO_EXT.test(file.originalname)) {
     return cb(new Error('Only video files (mp4, avi, mov, mkv, webm) are accepted'));
+  }
+  if (file.fieldname === 'image' && !IMAGE_EXT.test(file.originalname)) {
+    return cb(new Error('Only image files (jpg, jpeg, png, gif, webp) are accepted'));
   }
   cb(null, true);
 };
